@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Goblin Markdown Converter v1.0 - Trent N. Ford</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --success: #22c55e;
+        --success-dark: #16a34a;
+        --background: #ffffff;
+        --surface: #f8fafc;
+        --text: #1e293b;
+        --text-secondary: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+
+      [data-theme="dark"] {
+        --primary: #818cf8;
+        --primary-dark: #6366f1;
+        --success: #34d399;
+        --success-dark: #22c55e;
+        --background: #0f172a;
+        --surface: #1e293b;
+        --text: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border: #334155;
+        --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3),
+          0 2px 4px -2px rgb(0 0 0 / 0.3);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        line-height: 1.6;
+        background: var(--background);
+        color: var(--text);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .navbar {
+        background: var(--surface);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .nav-brand {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+      }
+
+      .nav-link:hover {
+        color: var(--text);
+      }
+
+      .theme-toggle {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1.25rem;
+        transition: color 0.2s ease, transform 0.2s ease;
+      }
+
+      .theme-toggle:hover {
+        color: var(--text);
+        transform: scale(1.1);
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+
+      .card {
+        background: var(--surface);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px -1px rgb(0 0 0 / 0.15),
+          0 4px 6px -2px rgb(0 0 0 / 0.1);
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .file-upload {
+        border: 2px dashed var(--border);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+      }
+
+      .file-upload:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      .file-upload.dragover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+      }
+
+      select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--background);
+        color: var(--text);
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        width: 100%;
+      }
+
+      button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .checkbox-group {
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.25rem;
+        border: 2px solid var(--border);
+        cursor: pointer;
+      }
+
+      #output {
+        margin-top: 2rem;
+        border-radius: 0.75rem;
+        overflow: hidden;
+      }
+
+      .output-header {
+        padding: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+      }
+
+      .output-content {
+        padding: 1rem;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-top: none;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        margin: 0;
+        font-family: "Inter", monospace;
+        font-size: 0.875rem;
+        line-height: 1.7;
+      }
+
+      .download-btn {
+        display: inline-block;
+        margin: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--success);
+        color: white;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+      }
+
+      .download-btn:hover {
+        background: var(--success-dark);
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          margin: 1rem auto;
+        }
+
+        .card {
+          padding: 1.5rem;
+        }
+
+        h1 {
+          font-size: 1.5rem;
+        }
+      }
+
+      .footer {
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 2rem 0;
+        margin-top: 4rem;
+        text-align: center;
+        color: var(--text-secondary);
+      }
+
+      .footer-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .footer-links {
+        margin-bottom: 1rem;
+      }
+
+      .footer-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        margin: 0 0.5rem;
+        transition: color 0.2s ease;
+      }
+
+      .footer-link:hover {
+        color: var(--text);
+      }
+
+      .footer-bio {
+        max-width: 600px;
+        margin: 0 auto 1.5rem;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+
+      .footer-bio a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .footer-bio a:hover {
+        color: var(--primary-dark);
+      }
+
+      .copyright {
+        font-size: 0.875rem;
+      }
+
+      @media (max-width: 640px) {
+        .footer {
+          padding: 1.5rem 0;
+          margin-top: 2rem;
+        }
+      }
+
+      .github-link {
+        margin: 1rem 0;
+        text-align: center;
+      }
+
+      .github-link a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: var(--bg-secondary);
+        transition: all 0.3s ease;
+      }
+
+      .github-link a:hover {
+        background: var(--accent-color);
+        color: var(--bg-primary);
+        transform: translateY(-2px);
+      }
+
+      .github-link svg {
+        transition: transform 0.3s ease;
+      }
+
+      .github-link a:hover svg {
+        transform: rotate(360deg);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="https://trentnford.com" class="nav-brand"> 🏠 Trent N. Ford </a>
+      <div class="nav-links">
+        <a href="https://trentnford.com" class="nav-link">Home</a>
+        <button
+          class="theme-toggle"
+          onclick="toggleTheme()"
+          title="Toggle dark mode"
+        >
+          🌓
+        </button>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="card">
+        <h1>Goblin Markdown Converter</h1>
+        <p
+          style="
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+          "
+        >
+          v1.0
+        </p>
+        <p
+          style="
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+          "
+        >
+          Convert your Goblin Tools task lists into beautifully formatted
+          Markdown or Canvas files. Simply drag and drop your .goblin or .json
+          file, choose your output format, and get instant results.
+        </p>
+
+        <div class="form-group">
+          <div class="file-upload" id="dropZone">
+            <p>Drag and drop your .goblin or .json file here</p>
+            <p style="color: var(--text-secondary); font-size: 0.875rem">or</p>
+            <input
+              type="file"
+              id="file"
+              accept=".goblin,.json"
+              style="display: none"
+            />
+            <button onclick="document.getElementById('file').click()">
+              Choose File
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="format">Output Format</label>
+          <select id="format">
+            <option value="markdown">Markdown</option>
+            <option value="canvas">Canvas</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="timestamps" />
+          <label for="timestamps">Show Timestamps</label>
+        </div>
+
+        <button onclick="convertFile()">Convert</button>
+
+        <div id="output" style="display: none">
+          <div class="download-buttons"></div>
+          <div class="output-section">
+            <div class="output-header" onclick="toggleOutput()">
+              <span>Conversion Results</span>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="output-content">
+              <pre class="output-text"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-bio">
+          Hi, I'm Trent N. Ford. I'm a tech professional, personal coach, and
+          creative with expertise in software development, web design, and
+          personal knowledge management. I help others optimize their
+          information organization and boost productivity through various tools
+          and techniques.
+        </div>
+        <div class="github-link">
+          <a
+            href="https://github.com/DrFretNot/goblin-to-markdown"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+              ></path>
+            </svg>
+            View source code on GitHub
+          </a>
+        </div>
+        <div class="copyright">© 2025 Trent N. Ford. All rights reserved.</div>
+      </div>
+    </footer>
+
+    <script>
+      function formatDuration(seconds) {
+        if (!seconds) return "";
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+
+        let result = "";
+        if (hours > 0) result += `${hours}h `;
+        if (minutes > 0) result += `${minutes}m `;
+        if (remainingSeconds > 0 || result === "")
+          result += `${remainingSeconds}s`;
+        return result.trim();
+      }
+
+      function formatEstimate(estimate) {
+        if (!estimate) return "";
+        return formatDuration(estimate);
+      }
+
+      function getTaskCategoryEmoji(category) {
+        const emojiMap = {
+          "☑️": "☑️", // General/Default
+          "🛠": "🛠", // Technical/Development
+          "📋": "📋", // Organization/Planning
+          "🎨": "🎨", // Creative/Design
+          "🏢": "🏢", // Business/Corporate
+          "📈": "📈", // Analytics/Growth
+          "🤝": "🤝", // Social/Collaboration
+          "📚": "📚", // Learning/Research
+          "🖊": "🖊", // Writing/Content
+          "🎓": "🎓", // Education/Academic
+          "💬": "💬", // Communication/Discussion
+          "📝": "📝", // Documentation/Notes
+          "💵": "💵", // Financial/Money
+        };
+        return emojiMap[category] || "☑️"; // Return default emoji if category not found
+      }
+
+      function processTasks(tasks) {
+        const taskMap = new Map();
+        const rootTasks = [];
+
+        // First pass: create task nodes
+        tasks.forEach((task) => {
+          taskMap.set(task.id, {
+            ...task,
+            children: [],
+          });
+        });
+
+        // Second pass: build tree structure
+        tasks.forEach((task) => {
+          const node = taskMap.get(task.id);
+          if (task.parentId) {
+            const parent = taskMap.get(task.parentId);
+            if (parent) {
+              parent.children.push(node);
+            }
+          } else {
+            rootTasks.push(node);
+          }
+        });
+
+        return rootTasks;
+      }
+
+      function generateMarkdown(taskNode, level = 0, showTimestamps = false) {
+        const indent = "  ".repeat(level);
+        const emoji =
+          level === 0 ? getTaskCategoryEmoji(taskNode.category) : "";
+        let markdown = "";
+
+        if (level === 0) {
+          // Root tasks are headers with emojis
+          markdown = `\n## ${emoji} ${taskNode.text}`;
+        } else {
+          // Sub-tasks are checkboxes
+          markdown = `${indent}- [ ] ${taskNode.text}`;
+        }
+
+        if (showTimestamps && taskNode.timestamp) {
+          const date = new Date(taskNode.timestamp);
+          markdown += ` (Created: ${date.toLocaleString()})`;
+        }
+
+        if (taskNode.estimate) {
+          markdown += ` ⏱️ ${formatEstimate(taskNode.estimate)}`;
+        }
+
+        markdown += "\n";
+
+        if (taskNode.children && taskNode.children.length > 0) {
+          taskNode.children.forEach((child) => {
+            markdown += generateMarkdown(child, level + 1, showTimestamps);
+          });
+        }
+
+        return markdown;
+      }
+
+      function convertToCanvas(tasks) {
+        const nodes = [];
+        const edges = [];
+        const nodeMap = {};
+        const rootTasks = [];
+
+        // Constants for layout
+        const HORIZONTAL_SPACING = 500; // Space between parent tasks
+        const VERTICAL_SPACING = 150; // Space between parent and children
+        const CHILD_SPACING = 120; // Space between sibling tasks
+
+        // First pass: Create nodes for all tasks
+        tasks.forEach((task) => {
+          // Format the card text with emoji and time estimate
+          const emoji = getTaskCategoryEmoji(task.category);
+          const timeEstimate = task.estimate
+            ? formatEstimate(task.estimate)
+            : "";
+          const cardText = `${emoji} ${task.text}${timeEstimate}`;
+
+          const node = {
+            id: task.id,
+            type: "text",
+            text: cardText,
+            width: 400,
+            height: 100,
+            color: "1",
+          };
+          nodes.push(node);
+          nodeMap[task.id] = node;
+          if (!task.parentId) {
+            rootTasks.push(task);
+          }
+        });
+
+        // Position root tasks horizontally
+        rootTasks.forEach((task, i) => {
+          const node = nodeMap[task.id];
+          node.x = i * HORIZONTAL_SPACING;
+          node.y = 0;
+
+          // Position children vertically below their parent
+          const children = tasks.filter((t) => t.parentId === task.id);
+          children.forEach((child, j) => {
+            const childNode = nodeMap[child.id];
+            childNode.x = node.x; // Align with parent
+            childNode.y = node.y + VERTICAL_SPACING + j * CHILD_SPACING;
+          });
+        });
+
+        // Create edges for parent-child relationships
+        tasks.forEach((task) => {
+          if (task.parentId) {
+            edges.push({
+              id: `${task.parentId}-${task.id}`,
+              fromNode: task.parentId,
+              toNode: task.id,
+              label: "",
+            });
+          }
+        });
+
+        return {
+          nodes: nodes,
+          edges: edges,
+        };
+      }
+
+      function toggleOutput() {
+        const outputSection = document.querySelector(".output-section");
+        const content = outputSection.querySelector(".output-content");
+        const icon = outputSection.querySelector(".toggle-icon");
+
+        content.classList.toggle("active");
+        icon.classList.toggle("active");
+      }
+
+      function convertFile() {
+        const fileInput = document.getElementById("file");
+        const format = document.getElementById("format").value;
+        const showTimestamps = document.getElementById("timestamps").checked;
+        const output = document.getElementById("output");
+        const outputContent = output.querySelector(".output-content");
+        const outputText = output.querySelector(".output-text");
+        const downloadButtons = output.querySelector(".download-buttons");
+
+        if (!fileInput.files.length) {
+          alert("Please select a file");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          try {
+            const jsonData = JSON.parse(e.target.result);
+            let tasks = jsonData;
+
+            // Handle canvas format
+            if (jsonData.nodes && jsonData.edges) {
+              // Convert canvas to tasks (simplified version)
+              tasks = jsonData.nodes.map((node) => ({
+                id: node.id.replace("task-", ""),
+                text: node.text,
+                parentId: null,
+                children: [],
+              }));
+
+              jsonData.edges.forEach((edge) => {
+                const fromId = edge.fromNode.replace("task-", "");
+                const toId = edge.toNode.replace("task-", "");
+                const toTask = tasks.find((t) => t.id === toId);
+                if (toTask) {
+                  toTask.parentId = fromId;
+                }
+              });
+            }
+
+            const processedTasks = processTasks(tasks);
+            let result = "";
+            let downloadLinks = "";
+
+            if (format === "markdown" || format === "both") {
+              const markdown =
+                "# Tasks\n" +
+                processedTasks
+                  .map((task) => generateMarkdown(task, 0, showTimestamps))
+                  .join("\n");
+
+              result += "<h3>Markdown Output:</h3>";
+              result += `<pre>${markdown}</pre>`;
+
+              const markdownBlob = new Blob([markdown], {
+                type: "text/markdown",
+              });
+              const markdownUrl = URL.createObjectURL(markdownBlob);
+              downloadLinks += `<a href="${markdownUrl}" download="${file.name.replace(
+                /\.[^/.]+$/,
+                ""
+              )}.md" class="download-btn">Download Markdown</a>`;
+            }
+
+            if (format === "canvas" || format === "both") {
+              const canvasData = convertToCanvas(tasks);
+
+              result += "<h3>Canvas Output:</h3>";
+              result += `<pre>${JSON.stringify(canvasData, null, 2)}</pre>`;
+
+              const canvasBlob = new Blob(
+                [JSON.stringify(canvasData, null, 2)],
+                { type: "application/json" }
+              );
+              const canvasUrl = URL.createObjectURL(canvasBlob);
+              downloadLinks += `<a href="${canvasUrl}" download="${file.name.replace(
+                /\.[^/.]+$/,
+                ""
+              )}.canvas" class="download-btn">Download Canvas</a>`;
+            }
+
+            output.style.display = "block";
+            downloadButtons.innerHTML = downloadLinks;
+            outputText.innerHTML = result;
+          } catch (error) {
+            output.style.display = "block";
+            outputText.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+          }
+        };
+
+        reader.readAsText(file);
+      }
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+      }
+
+      // Initialize theme from localStorage
+      const savedTheme = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+
+      // Add drag and drop functionality
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("file");
+
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        dropZone.classList.add("dragover");
+      }
+
+      function unhighlight(e) {
+        dropZone.classList.remove("dragover");
+      }
+
+      dropZone.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        handleFiles(files);
+      }
+
+      fileInput.addEventListener("change", function () {
+        handleFiles(this.files);
+      });
+
+      function handleFiles(files) {
+        if (files.length > 0) {
+          const file = files[0];
+          if (file.name.endsWith(".goblin") || file.name.endsWith(".json")) {
+            convertFile();
+          } else {
+            alert("Please upload a .goblin or .json file");
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
